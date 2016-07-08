@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>密码生成器</title>
+	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+	<meta content="sunyanzi@mop.com, cn_yanzi@yahoo.com.cn" name="author" />
+	<meta content="Copyright (C) Sunyanzi @MOP" name="copyright" />
+	<meta content="Sunyanzi @MOP" name="keywords" />
+	<link href="mailto:cn_yanzi@yahoo.com.cn" rev="made" />
+	<meta content="text/javascript" http-equiv="Content-Script-Type" />
+	<meta content="text/css" http-equiv="Content-Style-Type" />
+    <style type="text/css">
+      body {background-color: #000;color: #fff;}
+      * { line-height: 25px; font-family: 'Microsoft YaHei',"Helvetica Neue", "Luxi Sans", "DejaVu Sans", Tahoma, "STHeiti";}
+      input, select { font-size:20px; margin-left: 10px; }
+      p { font-size: 16px; }
+    </style>
+	<script type="text/javascript">
+		function binl2b64(a) {
+		var b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+		var c = "";
+		for (var d = 0; d < a.length * 4; d += 3) {
+			var e = (a[d >> 2] >> 8 * (d % 4) & 255) << 16 | (a[d + 1 >> 2] >> 8 * ((d + 1) % 4) & 255) << 8 | a[d + 2 >> 2] >> 8 * ((d + 2) % 4) & 255;
+			for (var f = 0; f < 4; f++) {
+				if (d * 8 + f * 6 > a.length * 32) c += b64pad;
+				else c += b.charAt(e >> 6 * (3 - f) & 63)
+			}
+		}
+		return c
+	}
+	function binl2hex(a) {
+		var b = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
+		var c = "";
+		for (var d = 0; d < a.length * 4; d++) {
+			c += b.charAt(a[d >> 2] >> d % 4 * 8 + 4 & 15) + b.charAt(a[d >> 2] >> d % 4 * 8 & 15)
+		}
+		return c
+	}
+	function binl2str(a) {
+		var b = "";
+		var c = (1 << chrsz) - 1;
+		for (var d = 0; d < a.length * 32; d += chrsz) b += String.fromCharCode(a[d >> 5] >>> d % 32 & c);
+		return b
+	}
+	function str2binl(a) {
+		var b = Array();
+		var c = (1 << chrsz) - 1;
+		for (var d = 0; d < a.length * chrsz; d += chrsz) b[d >> 5] |= (a.charCodeAt(d / chrsz) & c) << d % 32;
+		return b
+	}
+	function bit_rol(a, b) {
+		return a << b | a >>> 32 - b
+	}
+	function safe_add(a, b) {
+		var c = (a & 65535) + (b & 65535);
+		var d = (a >> 16) + (b >> 16) + (c >> 16);
+		return d << 16 | c & 65535
+	}
+	function core_hmac_md5(a, b) {
+		var c = str2binl(a);
+		if (c.length > 16) c = core_md5(c, a.length * chrsz);
+		var d = Array(16),
+			e = Array(16);
+		for (var f = 0; f < 16; f++) {
+			d[f] = c[f] ^ 909522486;
+			e[f] = c[f] ^ 1549556828
+		}
+		var g = core_md5(d.concat(str2binl(b)), 512 + b.length * chrsz);
+		return core_md5(e.concat(g), 512 + 128)
+	}
+	function md5_ii(a, b, c, d, e, f, g) {
+		return md5_cmn(c ^ (b | ~d), a, b, e, f, g)
+	}
+	function md5_hh(a, b, c, d, e, f, g) {
+		return md5_cmn(b ^ c ^ d, a, b, e, f, g)
+	}
+	function md5_gg(a, b, c, d, e, f, g) {
+		return md5_cmn(b & d | c & ~d, a, b, e, f, g)
+	}
+	function md5_ff(a, b, c, d, e, f, g) {
+		return md5_cmn(b & c | ~b & d, a, b, e, f, g)
+	}
+	function md5_cmn(a, b, c, d, e, f) {
+		return safe_add(bit_rol(safe_add(safe_add(b, a), safe_add(d, f)), e), c)
+	}
+	function core_md5(a, b) {
+		a[b >> 5] |= 128 << b % 32;
+		a[(b + 64 >>> 9 << 4) + 14] = b;
+		var c = 1732584193;
+		var d = -271733879;
+		var e = -1732584194;
+		var f = 271733878;
+		for (var g = 0; g < a.length; g += 16) {
+			var h = c;
+			var i = d;
+			var j = e;
+			var k = f;
+			c = md5_ff(c, d, e, f, a[g + 0], 7, -680876936);
+			f = md5_ff(f, c, d, e, a[g + 1], 12, -389564586);
+			e = md5_ff(e, f, c, d, a[g + 2], 17, 606105819);
+			d = md5_ff(d, e, f, c, a[g + 3], 22, -1044525330);
+			c = md5_ff(c, d, e, f, a[g + 4], 7, -176418897);
+			f = md5_ff(f, c, d, e, a[g + 5], 12, 1200080426);
+			e = md5_ff(e, f, c, d, a[g + 6], 17, -1473231341);
+			d = md5_ff(d, e, f, c, a[g + 7], 22, -45705983);
+			c = md5_ff(c, d, e, f, a[g + 8], 7, 1770035416);
+			f = md5_ff(f, c, d, e, a[g + 9], 12, -1958414417);
+			e = md5_ff(e, f, c, d, a[g + 10], 17, -42063);
+			d = md5_ff(d, e, f, c, a[g + 11], 22, -1990404162);
+			c = md5_ff(c, d, e, f, a[g + 12], 7, 1804603682);
+			f = md5_ff(f, c, d, e, a[g + 13], 12, -40341101);
+			e = md5_ff(e, f, c, d, a[g + 14], 17, -1502002290);
+			d = md5_ff(d, e, f, c, a[g + 15], 22, 1236535329);
+			c = md5_gg(c, d, e, f, a[g + 1], 5, -165796510);
+			f = md5_gg(f, c, d, e, a[g + 6], 9, -1069501632);
+			e = md5_gg(e, f, c, d, a[g + 11], 14, 643717713);
+			d = md5_gg(d, e, f, c, a[g + 0], 20, -373897302);
+			c = md5_gg(c, d, e, f, a[g + 5], 5, -701558691);
+			f = md5_gg(f, c, d, e, a[g + 10], 9, 38016083);
+			e = md5_gg(e, f, c, d, a[g + 15], 14, -660478335);
+			d = md5_gg(d, e, f, c, a[g + 4], 20, -405537848);
+			c = md5_gg(c, d, e, f, a[g + 9], 5, 568446438);
+			f = md5_gg(f, c, d, e, a[g + 14], 9, -1019803690);
+			e = md5_gg(e, f, c, d, a[g + 3], 14, -187363961);
+			d = md5_gg(d, e, f, c, a[g + 8], 20, 1163531501);
+			c = md5_gg(c, d, e, f, a[g + 13], 5, -1444681467);
+			f = md5_gg(f, c, d, e, a[g + 2], 9, -51403784);
+			e = md5_gg(e, f, c, d, a[g + 7], 14, 1735328473);
+			d = md5_gg(d, e, f, c, a[g + 12], 20, -1926607734);
+			c = md5_hh(c, d, e, f, a[g + 5], 4, -378558);
+			f = md5_hh(f, c, d, e, a[g + 8], 11, -2022574463);
+			e = md5_hh(e, f, c, d, a[g + 11], 16, 1839030562);
+			d = md5_hh(d, e, f, c, a[g + 14], 23, -35309556);
+			c = md5_hh(c, d, e, f, a[g + 1], 4, -1530992060);
+			f = md5_hh(f, c, d, e, a[g + 4], 11, 1272893353);
+			e = md5_hh(e, f, c, d, a[g + 7], 16, -155497632);
+			d = md5_hh(d, e, f, c, a[g + 10], 23, -1094730640);
+			c = md5_hh(c, d, e, f, a[g + 13], 4, 681279174);
+			f = md5_hh(f, c, d, e, a[g + 0], 11, -358537222);
+			e = md5_hh(e, f, c, d, a[g + 3], 16, -722521979);
+			d = md5_hh(d, e, f, c, a[g + 6], 23, 76029189);
+			c = md5_hh(c, d, e, f, a[g + 9], 4, -640364487);
+			f = md5_hh(f, c, d, e, a[g + 12], 11, -421815835);
+			e = md5_hh(e, f, c, d, a[g + 15], 16, 530742520);
+			d = md5_hh(d, e, f, c, a[g + 2], 23, -995338651);
+			c = md5_ii(c, d, e, f, a[g + 0], 6, -198630844);
+			f = md5_ii(f, c, d, e, a[g + 7], 10, 1126891415);
+			e = md5_ii(e, f, c, d, a[g + 14], 15, -1416354905);
+			d = md5_ii(d, e, f, c, a[g + 5], 21, -57434055);
+			c = md5_ii(c, d, e, f, a[g + 12], 6, 1700485571);
+			f = md5_ii(f, c, d, e, a[g + 3], 10, -1894986606);
+			e = md5_ii(e, f, c, d, a[g + 10], 15, -1051523);
+			d = md5_ii(d, e, f, c, a[g + 1], 21, -2054922799);
+			c = md5_ii(c, d, e, f, a[g + 8], 6, 1873313359);
+			f = md5_ii(f, c, d, e, a[g + 15], 10, -30611744);
+			e = md5_ii(e, f, c, d, a[g + 6], 15, -1560198380);
+			d = md5_ii(d, e, f, c, a[g + 13], 21, 1309151649);
+			c = md5_ii(c, d, e, f, a[g + 4], 6, -145523070);
+			f = md5_ii(f, c, d, e, a[g + 11], 10, -1120210379);
+			e = md5_ii(e, f, c, d, a[g + 2], 15, 718787259);
+			d = md5_ii(d, e, f, c, a[g + 9], 21, -343485551);
+			c = safe_add(c, h);
+			d = safe_add(d, i);
+			e = safe_add(e, j);
+			f = safe_add(f, k)
+		}
+		return Array(c, d, e, f)
+	}
+	function md5(a, b) {
+		return binl2hex(core_hmac_md5(a, b))
+	}
+	function select(a) {
+		return $(a).options[$(a).selectedIndex].value
+	}
+	function $(a) {
+		return document.getElementById(a)
+	}
+	function err(a) {
+		$("result").style.display = "none";
+		$("information").style.display = "none";
+		$("error").style.display = "block";
+		$("message").innerHTML = a;
+		return false
+	}
+	function reset() {
+		$("error").style.display = "none";
+		$("result").style.display = "none";
+		$("information").style.display = "block";
+		return true
+	}
+	function htmlentities(a) {
+		var b = document.createElement("div");
+		b.innerText = b.textContent = a;
+		a = b.innerHTML;
+		return a
+	}
+	function generate() {
+		if ("" === $("primary").value) return err("主密码不能为空白");
+		var a = parseInt($("length").value, 10);
+		if (isNaN(a) || 6 > a || a > 64) return err("密码长度必须在 6 到 64 之间");
+		var b = parseInt($("case").value, 10);
+		if (isNaN(b) || -1 > b || b > 1) return err("系统内部错误");
+		var c = md5("Sunyanzi" + $("identity").value, $("primary").value + String(a + b * 100));
+		var d = md5($("primary").value + "SafePassword", $("identity").value + "空白时候用这个作为默认");
+		var e = new jsSHA(c, "HEX");
+		var f = e.getHMAC(d, "HEX", "SHA-512", "HEX");
+		var g = ["rHI5XMYNpPaDgAmlshz6yibo2kTB9wRUGtxcv4V8ES0juKqnFLJOW1ZCefd37Q", "3750286194", "nxoABlszgOSahDTeKYLcEXrvqWmuGNRwVCHyFIkjUMpQbiJPZtfd", "$TSKVa*+JcnD;Hw8_~G%1&.s2B^CfEZX5,dWLo-j:IhP|k0Yt9ilRgz4xe6OrqU3yM@pbuNm7Av!=F#Q", "Wq&KApmBzwO>lN*E_HZg7\"=ivy!.J<-~G3/{+1rCM?%Q(S0FbL8ktIPxY)Vu}|dR;6jo`na$XU'f@\\ 4^eTh[9]s5,#cD:2"];
+		var h = parseInt(select("type"));
+		if (typeof g[h] == "undefined") return err("系统内部错误");
+		var j = g[h].length;
+		var k = "";
+		a *= 2;
+		for (i = 0; i < a; i += 2) k += g[h].substr(parseInt(f.substr(i, 2), 16) % j, 1);
+		switch (b) {
+		case -1:
+			k = k.toUpperCase();
+			break;
+		case 1:
+			k = k.toLowerCase()
+		}
+		$("error").style.display = "none";
+		$("information").style.display = "none";
+		$("result").style.display = "block";
+		$("passwd").innerHTML = htmlentities(k)
+	}
+	window.onload = function () {
+		$("generate").disabled = "";
+		if (document.all) {
+			$("generate").attachEvent("onclick", generate);
+			$("reset").attachEvent("onclick", reset)
+		} else {
+			$("generate").addEventListener("click", generate, false);
+			$("reset").addEventListener("click", reset, false)
+		}
+	};
+	var hexcase = 0;
+	var b64pad = "";
+	var chrsz = 8;
+	(function () {
+		var a = 8,
+			b = "",
+			c = 0,
+			d = function (a, b) {
+				this.highOrder = a;
+				this.lowOrder = b
+			},
+			e = function (b) {
+				var c = [],
+					d = (1 << a) - 1,
+					e = b.length * a,
+					f;
+				for (f = 0; f < e; f += a) {
+					c[f >> 5] |= (b.charCodeAt(f / a) & d) << 32 - a - f % 32
+				}
+				return c
+			},
+			f = function (a) {
+				var b = [],
+					c = a.length,
+					d, e;
+				for (d = 0; d < c; d += 2) {
+					e = parseInt(a.substr(d, 2), 16);
+					if (!isNaN(e)) {
+						b[d >> 3] |= e << 24 - 4 * (d % 8)
+					} else {
+						return "INVALID HEX STRING"
+					}
+				}
+				return b
+			},
+			g = function (a) {
+				var b = c ? "0123456789ABCDEF" : "0123456789abcdef",
+					d = "",
+					e = a.length * 4,
+					f, g;
+				for (f = 0; f < e; f += 1) {
+					g = a[f >> 2] >> (3 - f % 4) * 8;
+					d += b.charAt(g >> 4 & 15) + b.charAt(g & 15)
+				}
+				return d
+			},
+			h = function (a) {
+				var c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" + "0123456789+/",
+					d = "",
+					e = a.length * 4,
+					f, g, h;
+				for (f = 0; f < e; f += 3) {
+					h = (a[f >> 2] >> 8 * (3 - f % 4) & 255) << 16 | (a[f + 1 >> 2] >> 8 * (3 - (f + 1) % 4) & 255) << 8 | a[f + 2 >> 2] >> 8 * (3 - (f + 2) % 4) & 255;
+					for (g = 0; g < 4; g += 1) {
+						if (f * 8 + g * 6 <= a.length * 32) {
+							d += c.charAt(h >> 6 * (3 - g) & 63)
+						} else {
+							d += b
+						}
+					}
+				}
+				return d
+			},
+			i = function (a, b) {
+				if (b <= 32) {
+					return new d(a.highOrder >>> b | a.lowOrder << 32 - b, a.lowOrder >>> b | a.highOrder << 32 - b)
+				} else {
+					return new d(a.lowOrder >>> b | a.highOrder << 32 - b, a.highOrder >>> b | a.lowOrder << 32 - b)
+				}
+			},
+			j = function (a, b) {
+				if (b <= 32) {
+					return new d(a.highOrder >>> b, a.lowOrder >>> b | a.highOrder << 32 - b)
+				} else {
+					return new d(0, a.highOrder << 32 - b)
+				}
+			},
+			k = function (a, b, c) {
+				return new d(a.highOrder & b.highOrder ^ ~a.highOrder & c.highOrder, a.lowOrder & b.lowOrder ^ ~a.lowOrder & c.lowOrder)
+			},
+			l = function (a, b, c) {
+				return new d(a.highOrder & b.highOrder ^ a.highOrder & c.highOrder ^ b.highOrder & c.highOrder, a.lowOrder & b.lowOrder ^ a.lowOrder & c.lowOrder ^ b.lowOrder & c.lowOrder)
+			},
+			m = function (a) {
+				var b = i(a, 28),
+					c = i(a, 34),
+					e = i(a, 39);
+				return new d(b.highOrder ^ c.highOrder ^ e.highOrder, b.lowOrder ^ c.lowOrder ^ e.lowOrder)
+			},
+			n = function (a) {
+				var b = i(a, 14),
+					c = i(a, 18),
+					e = i(a, 41);
+				return new d(b.highOrder ^ c.highOrder ^ e.highOrder, b.lowOrder ^ c.lowOrder ^ e.lowOrder)
+			},
+			o = function (a) {
+				var b = i(a, 1),
+					c = i(a, 8),
+					e = j(a, 7);
+				return new d(b.highOrder ^ c.highOrder ^ e.highOrder, b.lowOrder ^ c.lowOrder ^ e.lowOrder)
+			},
+			p = function (a) {
+				var b = i(a, 19),
+					c = i(a, 61),
+					e = j(a, 6);
+				return new d(b.highOrder ^ c.highOrder ^ e.highOrder, b.lowOrder ^ c.lowOrder ^ e.lowOrder)
+			},
+			q = function (a, b) {
+				var c, e, f, g;
+				c = (a.lowOrder & 65535) + (b.lowOrder & 65535);
+				e = (a.lowOrder >>> 16) + (b.lowOrder >>> 16) + (c >>> 16);
+				f = (e & 65535) << 16 | c & 65535;
+				c = (a.highOrder & 65535) + (b.highOrder & 65535) + (e >>> 16);
+				e = (a.highOrder >>> 16) + (b.highOrder >>> 16) + (c >>> 16);
+				g = (e & 65535) << 16 | c & 65535;
+				return new d(g, f)
+			},
+			r = function (a, b, c, e) {
+				var f, g, h, i;
+				f = (a.lowOrder & 65535) + (b.lowOrder & 65535) + (c.lowOrder & 65535) + (e.lowOrder & 65535);
+				g = (a.lowOrder >>> 16) + (b.lowOrder >>> 16) + (c.lowOrder >>> 16) + (e.lowOrder >>> 16) + (f >>> 16);
+				h = (g & 65535) << 16 | f & 65535;
+				f = (a.highOrder & 65535) + (b.highOrder & 65535) + (c.highOrder & 65535) + (e.highOrder & 65535) + (g >>> 16);
+				g = (a.highOrder >>> 16) + (b.highOrder >>> 16) + (c.highOrder >>> 16) + (e.highOrder >>> 16) + (f >>> 16);
+				i = (g & 65535) << 16 | f & 65535;
+				return new d(i, h)
+			},
+			s = function (a, b, c, e, f) {
+				var g, h, i, j;
+				g = (a.lowOrder & 65535) + (b.lowOrder & 65535) + (c.lowOrder & 65535) + (e.lowOrder & 65535) + (f.lowOrder & 65535);
+				h = (a.lowOrder >>> 16) + (b.lowOrder >>> 16) + (c.lowOrder >>> 16) + (e.lowOrder >>> 16) + (f.lowOrder >>> 16) + (g >>> 16);
+				i = (h & 65535) << 16 | g & 65535;
+				g = (a.highOrder & 65535) + (b.highOrder & 65535) + (c.highOrder & 65535) + (e.highOrder & 65535) + (f.highOrder & 65535) + (h >>> 16);
+				h = (a.highOrder >>> 16) + (b.highOrder >>> 16) + (c.highOrder >>> 16) + (e.highOrder >>> 16) + (f.highOrder >>> 16) + (g >>> 16);
+				j = (h & 65535) << 16 | g & 65535;
+				return new d(j, i)
+			},
+			t = function (a, b, c) {
+				var e, f, g, h, i, j, t, u, v, w, x, y, z, A, B, C = [],
+					D;
+				if (c === "SHA-384" || c === "SHA-512") {
+					y = (b + 128 >> 10 << 5) + 31;
+					B = [new d(1116352408, 3609767458), new d(1899447441, 602891725), new d(3049323471, 3964484399), new d(3921009573, 2173295548), new d(961987163, 4081628472), new d(1508970993, 3053834265), new d(2453635748, 2937671579), new d(2870763221, 3664609560), new d(3624381080, 2734883394), new d(310598401, 1164996542), new d(607225278, 1323610764), new d(1426881987, 3590304994), new d(1925078388, 4068182383), new d(2162078206, 991336113), new d(2614888103, 633803317), new d(3248222580, 3479774868), new d(3835390401, 2666613458), new d(4022224774, 944711139), new d(264347078, 2341262773), new d(604807628, 2007800933), new d(770255983, 1495990901), new d(1249150122, 1856431235), new d(1555081692, 3175218132), new d(1996064986, 2198950837), new d(2554220882, 3999719339), new d(2821834349, 766784016), new d(2952996808, 2566594879), new d(3210313671, 3203337956), new d(3336571891, 1034457026), new d(3584528711, 2466948901), new d(113926993, 3758326383), new d(338241895, 168717936), new d(666307205, 1188179964), new d(773529912, 1546045734), new d(1294757372, 1522805485), new d(1396182291, 2643833823), new d(1695183700, 2343527390), new d(1986661051, 1014477480), new d(2177026350, 1206759142), new d(2456956037, 344077627), new d(2730485921, 1290863460), new d(2820302411, 3158454273), new d(3259730800, 3505952657), new d(3345764771, 106217008), new d(3516065817, 3606008344), new d(3600352804, 1432725776), new d(4094571909, 1467031594), new d(275423344, 851169720), new d(430227734, 3100823752), new d(506948616, 1363258195), new d(659060556, 3750685593), new d(883997877, 3785050280), new d(958139571, 3318307427), new d(1322822218, 3812723403), new d(1537002063, 2003034995), new d(1747873779, 3602036899), new d(1955562222, 1575990012), new d(2024104815, 1125592928), new d(2227730452, 2716904306), new d(2361852424, 442776044), new d(2428436474, 593698344), new d(2756734187, 3733110249), new d(3204031479, 2999351573), new d(3329325298, 3815920427), new d(3391569614, 3928383900), new d(3515267271, 566280711), new d(3940187606, 3454069534), new d(4118630271, 4000239992), new d(116418474, 1914138554), new d(174292421, 2731055270), new d(289380356, 3203993006), new d(460393269, 320620315), new d(685471733, 587496836), new d(852142971, 1086792851), new d(1017036298, 365543100), new d(1126000580, 2618297676), new d(1288033470, 3409855158), new d(1501505948, 4234509866), new d(1607167915, 987167468), new d(1816402316, 1246189591)];
+					if (c === "SHA-384") {
+						x = [new d(3418070365, 3238371032), new d(1654270250, 914150663), new d(2438529370, 812702999), new d(355462360, 4144912697), new d(1731405415, 4290775857), new d(41048885895, 1750603025), new d(3675008525, 1694076839), new d(1203062813, 3204075428)]
+					} else {
+						x = [new d(1779033703, 4089235720), new d(3144134277, 2227873595), new d(1013904242, 4271175723), new d(2773480762, 1595750129), new d(1359893119, 2917565137), new d(2600822924, 725511199), new d(528734635, 4215389547), new d(1541459225, 327033209)]
+					}
+				}
+				a[b >> 5] |= 128 << 24 - b % 32;
+				a[y] = b;
+				D = a.length;
+				for (z = 0; z < D; z += 32) {
+					e = x[0];
+					f = x[1];
+					g = x[2];
+					h = x[3];
+					i = x[4];
+					j = x[5];
+					t = x[6];
+					u = x[7];
+					for (A = 0; A < 80; A += 1) {
+						if (A < 16) {
+							C[A] = new d(a[A * 2 + z], a[A * 2 + z + 1])
+						} else {
+							C[A] = r(p(C[A - 2]), C[A - 7], o(C[A - 15]), C[A - 16])
+						}
+						v = s(u, n(i), k(i, j, t), B[A], C[A]);
+						w = q(m(e), l(e, f, g));
+						u = t;
+						t = j;
+						j = i;
+						i = q(h, v);
+						h = g;
+						g = f;
+						f = e;
+						e = q(v, w)
+					}
+					x[0] = q(e, x[0]);
+					x[1] = q(f, x[1]);
+					x[2] = q(g, x[2]);
+					x[3] = q(h, x[3]);
+					x[4] = q(i, x[4]);
+					x[5] = q(j, x[5]);
+					x[6] = q(t, x[6]);
+					x[7] = q(u, x[7])
+				}
+				switch (c) {
+				case "SHA-384":
+					return [x[0].highOrder, x[0].lowOrder, x[1].highOrder, x[1].lowOrder, x[2].highOrder, x[2].lowOrder, x[3].highOrder, x[3].lowOrder, x[4].highOrder, x[4].lowOrder, x[5].highOrder, x[5].lowOrder];
+				case "SHA-512":
+					return [x[0].highOrder, x[0].lowOrder, x[1].highOrder, x[1].lowOrder, x[2].highOrder, x[2].lowOrder, x[3].highOrder, x[3].lowOrder, x[4].highOrder, x[4].lowOrder, x[5].highOrder, x[5].lowOrder, x[6].highOrder, x[6].lowOrder, x[7].highOrder, x[7].lowOrder];
+				default:
+					return []
+				}
+			},
+			u = function (b, c) {
+				this.sha384 = null;
+				this.sha512 = null;
+				this.strBinLen = null;
+				this.strToHash = null;
+				if ("HEX" === c) {
+					if (0 !== b.length % 2) {
+						return "TEXT MUST BE IN BYTE INCREMENTS"
+					}
+					this.strBinLen = b.length * 4;
+					this.strToHash = f(b)
+				} else if ("ASCII" === c || "undefined" === typeof c) {
+					this.strBinLen = b.length * a;
+					this.strToHash = e(b)
+				} else {
+					return "UNKNOWN TEXT INPUT TYPE"
+				}
+			};
+		u.prototype = {
+			getHash: function (a, b) {
+				var c = null,
+					d = this.strToHash.slice();
+				switch (b) {
+				case "HEX":
+					c = g;
+					break;
+				case "B64":
+					c = h;
+					break;
+				default:
+					return "FORMAT NOT RECOGNIZED"
+				}
+				switch (a) {
+				case "SHA-384":
+					if (null === this.sha384) {
+						this.sha384 = t(d, this.strBinLen, a)
+					}
+					return c(this.sha384);
+				case "SHA-512":
+					if (null === this.sha512) {
+						this.sha512 = t(d, this.strBinLen, a)
+					}
+					return c(this.sha512);
+				default:
+					return "HASH NOT RECOGNIZED"
+				}
+			},
+			getHMAC: function (b, c, d, i) {
+				var j, k, l, m, n, o, p = [],
+					q = [];
+				switch (i) {
+				case "HEX":
+					j = g;
+					break;
+				case "B64":
+					j = h;
+					break;
+				default:
+					return "FORMAT NOT RECOGNIZED"
+				}
+				switch (d) {
+				case "SHA-384":
+					o = 384;
+					break;
+				case "SHA-512":
+					o = 512;
+					break;
+				default:
+					return "HASH NOT RECOGNIZED"
+				}
+				if ("HEX" === c) {
+					if (0 !== b.length % 2) {
+						return "KEY MUST BE IN BYTE INCREMENTS"
+					}
+					k = f(b);
+					n = b.length * 4
+				} else if ("ASCII" === c) {
+					k = e(b);
+					n = b.length * a
+				} else {
+					return "UNKNOWN KEY INPUT TYPE"
+				}
+				if (128 < n / 8) {
+					k = t(k, n, d);
+					k[31] &= 4294967040
+				} else if (128 > n / 8) {
+					k[31] &= 4294967040
+				}
+				for (l = 0; l <= 31; l += 1) {
+					p[l] = k[l] ^ 909522486;
+					q[l] = k[l] ^ 1549556828
+				}
+				m = t(p.concat(this.strToHash), 1024 + this.strBinLen, d);
+				m = t(q.concat(m), 1024 + o, d);
+				return j(m)
+			}
+		};
+		window.jsSHA = u
+	})()
+	</script>
+  <meta http-equiv="x-dns-prefetch-control" content="off"/></head>
+  <body>
+    <div><form>
+      <h1>密码生成器</h1>
+      <fieldset><legend>生成密码所需基础信息</legend>
+        主密码：<input type="password" size="19" id="primary" /><br />
+        辨别码：<input type="text" size="19" id="identity" /></fieldset><p></p>
+      <fieldset><legend>所生成密码的属性</legend>
+        密码构成：<select id="type">
+		  <option value="4">字母数字及全部符号</option>
+		  <option value="3">字母数字及基础符号</option>
+          <option value="0">字母数字混合</option>
+		  <option value="2">纯字母 ( A-Z )</option>
+          <option value="1">纯数字 ( 0-9 )</option>
+        </select><select id="case">
+          <option value="0">大小写混合</option>
+          <option value="-1">全部字母大写</option>
+          <option value="1">全部字母小写</option>
+        </select><br />
+        密码长度：<input type="text" id="length" value="16" /><br />
+        算法版本：<select>
+          <option>版本 α ( 20111222 )</option>
+        </select></fieldset><p></p>
+      <fieldset><legend>动作</legend>
+        <input type="button" id="generate" value="生成一个又安全又漂亮的密码" disabled="disabled" />
+        <input type="reset" id="reset" value="清空填写的内容" /></fieldset><p></p>
+      <fieldset id="information" style="display:block"><legend>系统说明文字</legend>
+        <p><b>主密码</b> 是用户唯一需要记忆的密码，长度不限，类似于原先使用的密码；<br />
+        <b>辨别码</b> 是一段用于区分密码使用场景的文字，例如 csdn / taobao / mail，可以留空；<br />
+        <b>密码构成</b> 表示最后生成的密码由哪些字符组成；<br />
+        <b>密码长度</b> 表示生成的密码长度，范围在 6 到 64 之间，推荐使用 12 到 20 之间的数字；<br />
+        <b>算法版本</b> 目前只有一个，将来如果改进了算法在旧算法下生成的密码也不会失效；<br />
+        全部填好之后点击【生成一个又安全又漂亮的密码】按钮即可。<br />
+        密码生成过程和网络无关，如担心这里挂掉可以把这个页面保存到本地使用。</p></fieldset>
+      <fieldset id="result" style="display:none"><legend>生成结果</legend>
+        恭喜，您生成的密码是 <b id="passwd" style="padding: 5px 10px; background-color: #eee; border: 1px dotted #bbb; color: #0a0; font-family: Courier;"></b> ，请牢记您的主密码和辨别码。</fieldset>
+      <fieldset id="error" style="display:none"><legend>错误信息</legend>
+        在执行过程中发生了如下错误：<b id="message" style="color:#933;"></b>，请修正后再试。</fieldset>
+    </form></div>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta content="True" name="HandheldFriendly" />
+    <meta content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0; name='viewport'" />
+    <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+    <meta name="author" content="{{ site.author.name }}">
+    <link href="/assets/themes/babel/css/default.css" media="screen" type="text/css"   rel="stylesheet">
+    <link rel="shortcut icon" href="/assets/themes/babel/img/favicon.ico" />
+    <link rel="apple-touch-icon" href="/assets/themes/babel/img/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/themes/babel/img/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/assets/themes/babel/img/apple-touch-icon-114x114.png">
+    {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
+    <script type="text/javascript" src="/assets/themes/babel/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/themes/babel/js/jquery.lazyload.js"></script>
+    <script type="text/javascript" src="/assets/themes/babel/js/jquery.scrolltotop.js"></script>
+    <script type="text/javascript">
+        jQuery(function($){
+            $.scrolltotop({className: 'totop'});
+            $("img").lazyload({
+                failurelimit : 10,
+                effect : "fadeIn"
+            });
+            $("a[rel*=external]").attr("target","_blank");
+        });
+    </script>
+</head>
+
+<body>
+    <div id="Top" style="background-image: url('/assets/themes/babel/img/bg_top_light.png')"><a href="#;" name="_top"></a>
+        <div id="TopMain">
+            <div id="Navigation">
+                <ul>
+                    <li><a href="/" alt="{{ site.title }}" class="top">Home</a></li>
+                    {% assign pages_list = site.pages %}
+                    {% assign group = 'navigation' %}
+                    {% include JB/pages_list %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div id="Wrapper" style="background-image: url('/assets/themes/babel/img/swatch.gif')">
+        <div id="Main">
+        <div id="Sidebar"></div>
+        <div id="Rightbar">
+            <div class="box">
+                <div class="cell">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                            <td width="48" valign="top"><a href="/"><img src="/assets/themes/babel/img/avatar48.png" border="0" /></a></td>
+                            <td width="10" valign="top"></td>
+                            <td width="auto" align="left"><span class="bigger"><a href="/{{ site.author.id }}">{{ site.author.id }}</a></span>
+                                <div class="sep5"></div>
+                                <span class="fade">{{ site.tagline }}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="cell"><span class="fade">{{ site.bio }}</span></div>
+                <div class="inner"><a href="atom.xml" target="_blank"><img src="/assets/themes/babel/img/rss.png" align="absmiddle" border="0" style="margin-top:-3px;"></a>&nbsp;<a href="atom.xml" target="_blank">RSS</a></div>
+            </div>
+            <div class="sep20"></div>          
+            <div class="box">
+                <div class="cell"><div class="fr"></div>
+                    <span class="fade">Categories</span>
+                </div>
+                <div class="inner">
+                {% for category in site.categories %} 
+                  <a  id="{{ category[0] }}-cat" href="/categories.html#{{ category[0] }}-ref" class="item_node">{{ category[0] | join: "/" }}</a>
+                {% endfor %}
+                </div>
+            </div>
+            <div class="sep20"></div>
+            <div class="box">
+                <div class="cell"><div class="fr"></div>
+                    <span class="fade">Tools</span>
+                </div>
+                
+                <div class="cell">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%"><tbody>
+                    <tr>
+                        <td width="10"></td>
+                        <td width="auto" valign="middle"><span class="item_hot_topic_title"><a href="/page/markdown/" target="_blank">markdown编辑器</a></span></td>
+                    </tr>
+                </tbody></table>
+                </div>
+                
+                <div class="cell">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%"><tbody>
+                    <tr>
+                        <td width="10"></td>
+                        <td width="auto" valign="middle"><span class="item_hot_topic_title"><a href="/page/netmask/" target="_blank">子网掩码计算器</a></span></td>
+                    </tr>
+                </tbody></table>
+                </div>
+                
+                <div class="cell">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%"><tbody>
+                    <tr>
+                        <td width="10"></td>
+                        <td width="auto" valign="middle"><span class="item_hot_topic_title"><a href="/page/password/" target="_blank">密码生成器</a></span></td>
+                    </tr>
+                </tbody></table>
+                </div>
+            </div>
+            <div class="sep20"></div>          
+            <div class="box">
+                <div class="cell"><div class="fr"></div>
+                    <span class="fade">Tags</span>
+                </div>
+                <div class="inner">
+                {% for tag in site.tags %} 
+                  <a  id="{{ tag[0] }}-tag" href="/tags.html#{{ tag[0] }}-ref" class="item_node">{{ tag[0] }}</a>
+                {% endfor %}
+                </div>
+            </div>
+            <div class="sep20"></div>       
+            <div class="box">
+                <div class="inner" align="center">
+                    <div style="width: 240px; text-align: left" >
+                        <span style="font-weight: bold; font-size: 10px; color: #e2e2e2;">Sponsored by</span>
+                        <div class="sep10"></div>
+                        <a href="http://www.vip.com" target="_blank" onClick="recordOutboundLink(this, 'Outbound Links', 'www.vip.com');"><img src="/assets/themes/babel/img/vip.com.jpeg" border="0" width="120" height="90" alt="唯品会——一家专门做特卖的网站" /></a>
+                        <div class="sep5"></div>
+                        <span style="font-size: 11px; color: #666;">
+                            <strong style="color: #000;"><a href="http://www.vip.com" class="black" onClick="recordOutboundLink(this, 'Outbound Links', 'www.vip.com');" target="_blank">唯品会——一家专门做特卖的网站</a></strong><div class="sep3"></div><span style="font-size: 12px;">唯品会，一家专门做特卖的网站，每天 100 个品牌授权特卖、确保正品、确保特价、限量抢购。</span>
+                        </span>
+                        <div class="sep3"></div>
+                        <small class="fade">Promoted by <a href="http://www.vip.com" target="_blank" onClick="recordOutboundLink(this, 'Outbound Links', 'www.vip.com');">唯品会</a></small>
+                    </div>
+                </div>
+            </div> 
+        </div>
+            
+        <div id="Content">
+    
+            {{ content }}
+            
+        </div>
+        <div class="c"></div>
+        </div>
+    </div>
+        
+    <div id="Bottom">
+        <div id="BottomMain">
+            <div class="fr" align="right"><a href="https://github.com/mojombo/jekyll" target="_blank"><img src="/assets/themes/babel/img/jekyll.png" border="0" alt="Jekyll" /></a><div class="sep10"></div><strong><a href="https://github.com/mojombo/jekyll" target="_blank">Jekyll is a simple, blog aware, static site generator. </a></strong></div>
+            <strong><a href="/napoleonu.html" class="dark">About</a></strong> &nbsp; | &nbsp; <strong><a href="https://github.com/napoleonu/napoleonu.github.com" class="dark">Fork me on GitHub</a></strong> &nbsp; 
+            <div class="sep10"></div>
+            <div class="sep5"></div>
+            <span class="fade">Theme made by <a href="http://www.olivida.com/" target="_blank" class="dark"><strong>olivida</strong></a></span>
+            <div class="sep10"></div>
+            <small>VERSION: {{site.version}}<br />♥ Do have a faith in what you're doing.</small>
+        </div>
+    </div>
+    
+    {% include JB/analytics-providers/google %}
+    
+    </body>
+</html>

@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" lang="en" class="translated-ltr">
+<head>
+<title>子网掩码计算器</title>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta name="keywords" content="子网掩码计算器">
+<meta name="description" content="子网掩码计算器">
+<script charset="utf-8" language="javascript" type="text/javascript" >
+    var internal__ipsCollection = [];
+
+    function getObj(x) {
+     if (document.getElementById) return (document.getElementById(x)) ? document.getElementById(x) : false;
+     return false;
+    }
+
+    function updateInfos() {}
+
+    function IpAddress(val) {
+     this.internalIndex = internal__ipsCollection.length;
+     this.getIndex      = function(){ return this.internalIndex };
+     this.internalType  = 'ip';
+     this.name          = 'internal__ipObj'+this.internalIndex;
+     this.bytes         = [];
+     this.getIpText     = function(){ return this.bytes[3].getText()+'.'+this.bytes[2].getText()+'.'+this.bytes[1].getText()+'.'+this.bytes[0].getText() };
+     this.getBinaryText = function(){ return this.bytes[3].getBitsString()+'.'+this.bytes[2].getBitsString()+'.'+this.bytes[1].getBitsString()+'.'+this.bytes[0].getBitsString() };
+     this.getName       = function(){ return this.name };
+     this.getText       = function(){ return this.getValue().toString() };
+     this.getType       = function(){ return this.internalType };
+     this.getValue      = function(){ return this.bytes[0].getValue()+2*(this.bytes[1].getValue()+2*(this.bytes[2].getValue()+2*this.bytes[3].getValue())) };
+     this.setValue      = internal__IPAddress__setIpAddressValue;
+     this.setTextValue  = internal__IPAddress__setIpAddressTextValue;
+     this.getHtmlForm   = function(){ return '<div class="ipform" id="'+this.getName()+'_form">'+this.bytes[3].getHtmlFullForm()+this.bytes[2].getHtmlFullForm()+this.bytes[1].getHtmlFullForm()+this.bytes[0].getHtmlFullForm()+'</div>' };
+     this.toString      = this.getHtmlForm;
+     internal__ipsCollection[this.internalIndex] = this;
+     internal__IPAddress__initializeBytes(this, (val) ? parseInt(val) : 0);
+     return this;
+    }
+
+    function NetMask(val) {
+     var x           = new IpAddress(val);
+     x.internalType  = 'mask';
+     x.setNetMask    = internal__NetMask__setNetMask;
+     x.getMaskLength = internal__NetMask__getNetMaskLength;
+     return x;
+    }
+
+    function Byte(ip,val) {
+     this.ip               = ip;
+     this.internalIndex    = this.ip.bytes.length;
+     this.getIndex         = function(){ return this.internalIndex };
+     this.name             = this.ip.getName() + '_byte' + this.internalIndex;
+     this.getName          = function(){ return this.name };
+     this.bits             = [];
+     this.setValue         = internal__Byte__setByteValue;
+     this.getIp            = function(){ return this.ip };
+     this.getText          = function(){ return this.getValue().toString() };
+     this.getValue         = internal__Byte__getValueFromBits;
+     this.getBitsArray     = function(){ return this.bits };
+     this.getBitsString    = function(){ var risp = ''; for (var i=7; i>-1; i--) risp += this.bits[i].getText(); return risp };
+     this.getHtmlEditField = function(){ return '<input id="'+this.getName()+'_edit" type="text" class="byte" value="'+this.getText()+'" onchange="internal__ipsCollection['+this.ip.getIndex()+'].bytes['+this.getIndex()+'].updateByEdit()" size="3" />' };
+     this.getHtmlBitsField = function(){ var i,a=[]; for(i=0;i<8;i++)a[i]=this.bits[7-i].getHtmlButton(); return a.join("\n") };
+     this.getHtmlFullForm  = function(){ return '<div class="byteform"><div class="byteedit">'+this.getHtmlEditField()+'</div><div class="bytebits">'+this.getHtmlBitsField()+'</div></div>' };
+     this.updateHtml       = function(){ var x=getObj(this.getName()+'_edit'); if (x) x.value = this.getText() };
+     this.updateByEdit     = function(){ this.setValue(parseInt(getObj(this.getName()+'_edit').value)); for (var i=0; i<7; i++) this.bits[i].updateHtml(); updateInfos() };
+     this.ip.bytes[this.internalIndex] = this;
+     internal__Byte__initializeBits(this, (val) ? parseInt(val) : 0);
+     return this;
+    }
+
+    function Bit(by,val) {
+     this.by            = by;
+     this.internalIndex = this.by.bits.length;
+     this.getIndex      = function(){ return this.internalIndex };
+     this.name          = this.by.getName() + '_bit' + this.internalIndex;
+     this.getName       = function(){ return this.name };
+     this.value         = (val) ? parseInt(val) % 2 : 0;
+     this.getByte       = function(){ return this.by };
+     this.getText       = function(){ return this.value.toString() };
+     this.getValue      = function(){ return parseInt(this.value) };
+     this.getReverse    = function(){ return this.value == 0 ? 1 : 0 };
+     this.setValue      = function(v){ this.value = parseInt(v) % 2; this.updateHtml(); return this.value };
+     this.setReverse    = function(){ this.setValue(this.getReverse()); this.updateHtml(); this.by.updateHtml(); updateInfos() };
+     this.getHtmlButton = internal__Bit__getHtmlButton;
+     this.updateHtml    = function(){ var x=getObj(this.getName()); if (x) x.innerHTML = this.getText(); };
+     this.by.bits[this.internalIndex] = this;
+     return this;
+    }
+
+
+    function internal__IPAddress__initializeBytes(ip,v) {
+     var r,risp = new Array(4);
+     for (var i=0; i<4; i++) {
+      r = v % 256;
+      v = parseInt((v -r)/256);
+      new Byte(ip,r);
+     }
+    }
+
+    function internal__NetMask__setNetMask(by,bit) {
+     for (var i=0; i<4; i++) {
+      if (i==by) {
+       for (var j=0; j<8; j++) {
+         this.bytes[i].bits[j].setValue( j < bit ? 0 : 1 );
+       }
+       this.bytes[i].updateHtml();
+      } else {
+       this.bytes[i].setValue( i < by ? 0 : 255 );
+       this.bytes[i].updateByEdit();
+      }
+     }
+    }
+
+    function internal__IPAddress__setIpAddressValue(v) {
+     var i,r;
+     for (i=0; i<4; i++) {
+      r = v % 256;
+      v = parseInt((v -r)/256);
+      this.bytes[i].setValue(r);
+     }
+    }
+
+    function internal__IPAddress__setIpAddressTextValue(t) {
+     var b = t.toString().split('.');
+     for (var i=0; i<4; i++) this.bytes[3 -i].setValue(parseInt(b[i]));
+    }
+
+    function internal__Byte__initializeBits(by,v) {
+     var r,risp = new Array(8);
+     for (var i=0; i<8; i++) {
+      r = v % 2;
+      v = parseInt((v -r)/2);
+      new Bit(by,r);
+     }
+    }
+
+    function internal__Byte__setByteValue(val) {
+     var i,r;
+     for(i=0; i<8; i++) {
+      r = val % 2;
+      val = parseInt((val - r)/2);
+      this.bits[i].setValue(r);
+     }
+     this.updateHtml();
+    }
+
+    function internal__Byte__getTextFromBits() { return this.getValue().toString() }
+
+    function internal__Byte__getValueFromBits() {
+     var tot = 0, peso = 1;
+     for (var i=0; i<8; i++) {
+      tot += parseInt( this.bits[i].getValue() * peso );
+      peso = peso *2;
+     }
+     return tot;
+    }
+
+    function internal__Byte__getBitsString() {
+     var risp = ''; for (var i=7; i>-1; i--) risp += this.bits[i].getText(); return risp;
+    }
+
+    function internal__Bit__getHtmlButton() {
+     var by = this.getByte();
+     var ip = by.getIp();
+     var ipt = ip.getType()
+     var risp = '<div id="'+this.getName()+'" class="bit" onclick="';
+     if (ipt == 'ip') risp += "internal__ipsCollection["+ip.getIndex()+"].bytes["+by.getIndex()+"].bits["+this.getIndex()+"].setReverse();";
+     if (ipt == 'mask') risp += "internal__ipsCollection["+ip.getIndex()+"].setNetMask("+by.getIndex()+","+this.getIndex()+");";
+     risp += '">'+this.getText()+'</div>';
+     return risp;
+    }
+
+    function internal__NetMask__getNetMaskLength() {
+     var bs=this.bytes;
+     var invert = -1;
+     var tot = 0;
+     var prev = -1;
+     var bit = 0;
+     for (var i=3; i>-1; i--) {
+      for (var j=7; j>-1; j--) {
+       bit = bs[i].bits[j].getValue();
+       tot += bit;
+       if (prev != bit) invert++;
+       prev = bit;
+      }
+     }
+     return invert > 1 ? false : tot;
+    }
+</script>
+<script type="text/javascript" language="javascript" charset="utf-8">
+    var theIP = new IpAddress();
+    theIP.setTextValue('192.168.0.1');
+
+    var theMask = new NetMask();
+    theMask.setTextValue('255.255.255.0');
+
+    var testIP = new IpAddress();
+
+    window.onload=function() {
+     getObj('ipMainForm').innerHTML = theIP;
+     getObj('maskMainForm').innerHTML = theMask;
+     getObj('copyright').innerHTML += '<a href="mailto:'+'balestra'+'@cesmail.net">'+'Marco Balestra</a>';
+     updateInfos();
+    }
+
+    function updateInfos() {
+     var i,by,bit,netclass;
+     var sml = theMask.getMaskLength();
+     var invalidMask = '<b>INVALID</b>';
+     getObj('ipClassicValue').innerHTML = theIP.getIpText()+'/'+(sml ? theMask.getIpText() : invalidMask);
+     getObj('ipCiscoValue').innerHTML = theIP.getIpText()+'/'+(sml ? sml : invalidMask);
+     getObj('ipBinaryValue').innerHTML = theIP.getBinaryText();
+     getObj('maskBinaryValue').innerHTML = sml ? theMask.getBinaryText() : invalidMask;
+     testIP.setTextValue(theIP.getIpText());
+     if ((sml) && (sml < 31)) {
+      for (i=sml; i<32; i++) {
+       bit = i % 8;
+       by = (i - bit) /8;
+       testIP.bytes[3 - by].bits[7 - bit].setValue(0);
+      }
+      getObj('networkRange').innerHTML = testIP.getIpText()+'/'+(sml ? sml : invalidMask);
+      getObj('networkValue').innerHTML = sml ? testIP.getIpText() : invalidMask;
+      for (i=sml; i<32; i++) {
+       bit = i % 8;
+       by = (i - bit) /8;
+       testIP.bytes[3 - by].bits[7 - bit].setValue(1);
+      }
+      getObj('broadcastValue').innerHTML = (sml ? testIP.getIpText() : invalidMask);
+     } else {
+      getObj('networkRange').innerHTML = '';
+      getObj('networkValue').innerHTML = '';
+      getObj('broadcastValue').innerHTML = '';
+     }
+     getObj('networkClass').innerHTML = getNetClass(sml);
+     if (sml) {
+      by = 1;
+      for (i=0; i<(32 -sml); i++) by = by * 2;
+      getObj('availableIPs').innerHTML = by;
+     } else {
+      getObj('availableIPs').innerHTML = '';
+     }
+    }
+
+    function getNetClass(x) {
+     if (x) {
+      if (x > 28) return '';
+      if (x == 28) return 'D';
+      if (x > 24) return 'subnet of C';
+      if (x == 24) return 'C';
+      if (x > 16) return 'subnet of B';
+      if (x == 16) return 'B';
+      if (x > 8) return 'subnet of A';
+      if (x == 8) return 'A';
+      if (x > 0) return 'unknown';
+     } else {
+      return '';
+     }
+    }
+
+    function showHideInfo() {
+     var i = getObj('otherinfo');
+     if (i) if (i.style) i.style.display = i.style.display == 'block' ? 'none' : 'block';
+     return void(0);
+    }
+</script>
+<style type="text/css">
+    *[onclick] { cursor: pointer; }
+    table.ipTable { margin: 10px auto 10px 10px; }
+    table.ipTable tr { vertical-align: top; }
+    table.ipTable td { padding: 2px; }
+    table.ipTable td.label { padding: 10px; text-align: right; }
+    table.details { margin: 10px auto 10px 10px; }
+    table.details tr { vertical-align: middle; }
+    table.details td { font-family: monospace; font-size: 14px; line-height: 16px; margin: 0px; padding: 1px; }
+    table.details td.label { color: #666666; font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 13px; font-style: italic; text-align: right; }
+    div.ipform { border: groove 2px white; padding: 5px 10px; text-align: center; width: 600px; }
+    div.byteform { display: table-cell; text-align: center; width: 150px; }
+    div.byteedit { display: block; margin: 0px 2px 5px 2px; }
+    input.byte { text-align: right; }
+    div.bytebits { display: block; margin: 5px 1px 0px 1px; }
+    div.bit { background-color: white; border: solid 1px #dddddd; display: inline; font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 10px; margin: 0px 0px 0px 0px; padding: 0px 1px 0px 1px; }
+    div#copyright { bottom: 5px; font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 10px; position: absolute; right: 5px; text-align: right; }
+    table#otherinfo { display: none; margin: 0px 10px; }
+    table#otherinfo tr { vertical-align: top; }
+    table#otherinfo td { font-family: monospace; font-size: 14px; line-height: 16px; margin: 0px; padding: 3px; }
+    table#otherinfo td.info { font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 12px; font-style: italic; line-height: 16px; margin: 0px; padding: 3px 5px; }
+    h3 { font-family: Verdana, Helvetica, Arial, sans-serif; font-size: 14px; font-style: normal; font-weight: bold; margin: 0px; padding: 10px; }
+</style>
+
+<script type="text/javascript">
+/******************************************************************************
+* Feel free to use this code.  Leave my comments in place please.
+* JavaScript Subnet Calculator written by John Thaemltiz
+******************************************************************************/
+/******************************************************************************
+* You can see the use of all the available functions in displayInfo()
+*
+* All the values are calculated based on only 2 array variables.
+*    nAddr = This is your network address.  It's a 4 element array of
+*        integers.  Each integer is an octet of the IP Address.
+*    nMask = This is your network mask.  Same kind of 4 element array
+*        to hold your mask.
+*
+* That's all you need to calculate the rest of the values you see.
+* Note I kick off all the calculations by calling calculateClass('A') onload.
+******************************************************************************/
+/******************************************************************************
+* Declare our network address and mask.
+******************************************************************************/
+    var nAddr = new Array(10,0,0,0);
+    var nMask = new Array(255,0,0,0);
+    
+/******************************************************************************
+* displayInfo() performs calculations and populates our HTML elements.
+*
+* I declare variables with the result of each calculation I do.  Hence the real
+* code, the calculation functions, are not dependent on HTML form elements.
+******************************************************************************/
+    function displayInfo() {
+        try {
+            document.getElementById("network").value = nAddr[0]+"."+nAddr[1]+"."+nAddr[2]+"."+nAddr[3];
+            document.getElementById("mask").value = nMask[0]+"."+nMask[1]+"."+nMask[2]+"."+nMask[3];
+            var wc = wildcardMask(nMask);
+            document.getElementById("wildcard").value = wc[0]+"."+wc[1]+"."+wc[2]+"."+wc[3];
+            var cidr = octet2cidr(nMask);
+            document.getElementById("maskbits").value = cidr;
+            document.getElementById("bitmap").value = subnetBitmap(nAddr,nMask);
+            document.getElementById("hosts").value = hostCount(nMask);
+            var aSubnet = subnetID(nAddr,nMask);
+            document.getElementById("subnetID").value = aSubnet[0]+"."+aSubnet[1]+"."+aSubnet[2]+"."+aSubnet[3];
+            var aBcast = broadcast(nAddr,wc);
+            document.getElementById("broadcast").value = aBcast[0]+"."+aBcast[1]+"."+aBcast[2]+"."+aBcast[3];
+            var aStart = startingIP(nAddr,nMask);
+            document.getElementById("startIP").value = aStart[0]+"."+aStart[1]+"."+aStart[2]+"."+aStart[3];
+            var aEnd = endingIP(nAddr,wc);
+            document.getElementById("endIP").value = aEnd[0]+"."+aEnd[1]+"."+aEnd[2]+"."+aEnd[3];
+            populateMaskSelect( document.getElementById('maskSelect'), nAddr, nMask[0]+"."+nMask[1]+"."+nMask[2]+"."+nMask[3]);
+            populateHostsSelect( document.getElementById('hostsSelect'), nAddr,cidr);
+        } catch(e) {
+            if( confirm("Error: Debug the stack trace?") ) {
+                stackTrace(e);
+            }
+        }
+    }
+/******************************************************************************
+* These are the real functions that do all the work.  These functions are
+* called from displayInfo which then displays the calculated info.
+******************************************************************************/
+// Returns the wildcard mask from the subnet mask.  The wild card mask is
+//    the subnet mask with the bits flipped.  Hence you just need to pass
+//    in the subnet mask.
+    function wildcardMask(aMask){
+        var a = new Array(0,0,0,0);
+        for(var i=0;i<4;i++){
+            a[i] = 255 - aMask[i];
+        }
+        return a;
+    }
+// Calculate the last available ip address in the network and return it as
+//    an int array.  This is basically one less than the broadcast address.
+//    We need the network address and the wildcard mask for this.
+    function endingIP(aNet,aWild){
+        // work around int32
+        var a = new broadcast(aNet,aWild);
+        var d = octet2dec(a);
+        d = d-1;
+        return dec2octet(d);
+    }
+// Calculate the broadcast address (the last ip address in the network) and
+//    return it as an int array.
+//    We need the network address and the wildcard mask for this.
+    function broadcast(aNet,aWild){
+        // work around int32
+        var a = new Array(0,0,0,0);
+        for(var i=0;i<4;i++){
+            a[i] = aNet[i] | aWild[i];
+        }
+        return a;
+    }
+// Calculate the subnet id available address in the network and return it as an
+//    int array.  This is basically one more than the network address (subnet ID).
+//    We need the network address and the subnet mask for this.
+    function startingIP(aNet,aMask){
+        var a = subnetID(aNet,aMask);
+        var d = octet2dec(a);
+        d = d+1;
+        return dec2octet(d);
+    }
+// Calculate the subnet id  (the first address in the network) and return it as an
+//    int array.
+//    We need the network address and the subnet mask for this.
+    function subnetID(aNet,aMask){
+        var a = new Array(0,0,0,0);
+        for(var i=0;i<4;i++){
+            a[i] = aNet[i] & aMask[i];
+        }
+        return a;
+    }
+// Count the number of hosts based on a subnet mask
+    function hostCount(aMask) {
+        var bits = 32 - octet2cidr(aMask);
+        // get # of addresses in network and subtract 2
+        return Math.pow(2,bits) -2;
+    }
+// Convert a subnet mask array into CIDR (# of bits) (255.255.255.0 = 24 etc.)
+    function octet2cidr(aMask) {
+        var mask = octet2dec(aMask);
+        // get binary string
+        mask = mask.toString(2);
+        // return mask length
+        return mask.indexOf(0);
+    }
+// calculate all available bits in and return it as a string.
+//    1 and 0 are hard coded by Class as defined by the IEEE
+//    n = network mask as defined by Class
+//    s = subnet mask based
+//    h = available host IP addresses
+    function subnetBitmap(aNet,aMask){
+        var map = "";
+        var i = 0;
+        var cidr = octet2cidr(aMask);
+        if( aNet[0] >= 1 && aNet[0] <= 126 ) {
+            //class A
+            map = "0nnnnnnn";
+            i = map.length;
+        } else if( aNet[0] >= 128 && aNet[0] <= 191 ){
+            //class B
+            map = "10nnnnnn.nnnnnnnn";
+            i = map.length-1;
+        } else if( aNet[0] >= 192 && aNet[0] <= 223 ){
+            //class C
+            map = "110nnnnn.nnnnnnnn.nnnnnnnn";
+            i = map.length-2;
+        }
+        // subnet bits
+        while(i < cidr) {
+            if(i%8 == 0) map+=".";
+            map += "s";
+            i++;
+        }
+        // host bits
+        while(i < 32) {
+            if(i%8 == 0) map+=".";
+            map += "h";
+            i++;
+        }
+        return map;
+    }
+// Convert CIDR to array of 4 ints (Classless Inter Domain Routing)
+    function cidr2octet(bits) {
+        var bits = parseInt(bits);
+        if( bits < 0 | bits > 32 ) {
+            alert("Invalid 32 bit DIDR mask.  You entered "+bits);
+            return false;
+        }
+        // make up our mask
+        var ones = "11111111111111111111111111111111";
+        var mask = parseInt(ones.substring(0,bits),2);
+        var shift = 32-bits;
+        // poor mans bit shift because javascript uses 32 bit integers
+        mask = mask * Math.pow(2,shift);
+        return dec2octet(mask);
+    }
+// Convert our array of 4 ints into a decimal (watch out for 16 bit JS integers here)
+    function octet2dec(a){
+        //alert("octet2dec1 "+a[0]+"\n"+dec2bin(a[0])+"\n"+dec2bin(a[0] * 16777216));
+        // poor mans bit shifting (Int32 issue)
+        var d = 0;
+        d = d + parseInt(a[0]) * 16777216 ;  //Math.pow(2,24);
+        d = d + a[1] * 65536;      //Math.pow(2,16);
+        d = d + a[2] * 256;       //Math.pow(2,8);
+        d = d + a[3];
+        return d;
+    }
+// Convert decimal to our array of 4 ints.
+    function dec2octet(d){
+        //alert("d="+d+" "+d.toString(2)+"="+d.toString(2).substring(0,8)+"="+parseInt(d.toString(2).substring(0,8),2));
+        var zeros = "00000000000000000000000000000000";
+        var b = d.toString(2);
+        var b = zeros.substring(0,32-b.length) + b;
+        var a = new Array(
+            parseInt(b.substring(0,8),2)    // 32 bit integer issue (d & 4278190080)/16777216   //Math.pow(2,32) - Math.pow(2,24);
+            , (d & 16711680)/65536      //Math.pow(2,24) - Math.pow(2,16);
+            , (d & 65280)/256         //Math.pow(2,16) - Math.pow(2,8);
+            , (d & 255)
+            );          //Math.pow(2,8);
+        return a;
+    }
+// convert decimal to binary string representation
+    function dec2bin(d) {
+        var b = d.toString(2);
+        return b;
+    }
+// convert binary string to decimal
+    function bin2dec(b) {
+        return parseInt(b,2);
+    }
+    function calculateClass( c ) {
+        switch(c)
+        {
+            case "B":
+                nAddr = new Array(172,168,0,1);
+                nMask = new Array(255,255,0,0);
+                break;
+            case "C":
+                nAddr = new Array(192,168,0,1);
+                nMask = new Array(255,255,255,0);
+                break;
+            default:
+                // default to class A
+                nAddr = new Array(10,0,0,1);
+                nMask = new Array(255,0,0,0);
+                break;
+        }
+        displayInfo();
+    }
+/******************************************************************************
+* The functions below just set the values in our HTML form elements.  These
+*    elements can be submitted to a server side script for database storage.
+*    These functions are linked to onload, onchange, etc. in our HTML.
+******************************************************************************/
+    function calculateIPCIDR(ip) {
+        /*
+        var x = mask.value;
+        var re = new RegExp("^([0-9]{1,3}\.){3}[0-9]{1,3}(( ([0-9]{1,3}\.){3}[0-9]{1,3})|(/[0-9]{1,2}))$");
+        if( !re.test(mask.value) ) {
+            var s = "Use IP & CIDR Netmask: 10.0.0.1/22";
+            s += "\nOr IP & Netmask: 10.0.0.1 255.255.252.0";
+            //s += "\nOr IP & Wildcard Mask: 10.0.0.1 0.0.3.255";
+            mask.focus();
+            mask.select();
+            return false;
+        }
+        */
+        var ipa = ip.split('/');
+        if( ipa.length = 2 ) {
+            var a = ipa[0].split('.');
+            nAddr[0] = parseInt(a[0]);
+            nAddr[1] = parseInt(a[1]);
+            nAddr[2] = parseInt(a[2]);
+            nAddr[3] = parseInt(a[3]);
+            nMask = cidr2octet(ipa[1]);
+        } else {
+            nAddr = ip.split('.');
+        }
+        displayInfo();
+    }
+    
+    function calculateSubnet(mask) {
+        var a = mask.split('.');
+        nMask[0] = parseInt(a[0]);
+        nMask[1] = parseInt(a[1]);
+        nMask[2] = parseInt(a[2]);
+        nMask[3] = parseInt(a[3]);
+        displayInfo();
+    }
+    function calculateHosts(cidr) {
+        nMask = cidr2octet(cidr);
+        displayInfo();
+    }
+    // functions to build drop downs
+    function populateMaskSelect( s, aNet, maskString) {
+        s.length = 0;
+        var a = new Array(0,0,0,0);
+        var i = 0;
+        if( aNet[0] >= 1 && aNet[0] <= 126 ) {
+            //class A
+            a[i++] = 255;
+        } else if( aNet[0] >= 128 && aNet[0] <= 191 ){
+            //class B
+            a[i++] = 255;
+            a[i++] = 255;
+        } else if( aNet[0] >= 192 && aNet[0] <= 223 ){
+            //class C
+            a[i++] = 255;
+            a[i++] = 255;
+            a[i++] = 255;
+        }
+        while( i < 4 ) {
+            var t = a[0]+"."+a[1]+"."+a[2]+"."+a[3];
+            addOption(s,t,t);
+            var pow = 7;
+            while(pow >= 0 && !(i==3 && pow<2 )) {
+                a[i] = a[i] + Math.pow(2,pow);
+                t = a[0]+"."+a[1]+"."+a[2]+"."+a[3];
+                addOption(s,t,t);
+                pow--;
+            }
+            i++;
+        }
+        selectOption(s,maskString);
+    }
+    function populateHostsSelect(s,aNet,cidr){
+        s.length = 0;
+        var pow = 8;
+        if( aNet[0] >= 1 && aNet[0] <= 126 ) {
+            //class = 'A';
+            pow = 24;
+        } else if( aNet[0] >= 128 && aNet[0] <= 191 ){
+            //class = 'B';
+            pow = 16;
+        } else if( aNet[0] >= 192 && aNet[0] <= 223 ){
+            //class = 'C';
+            pow = 8;
+        }
+        var t = 2;
+        while(pow > 2 ) {
+            t = Math.pow(2,pow) -2;
+            addOption(s,t,32-pow);
+            pow--;
+        }
+        selectOption(s,cidr);
+    }
+    function addOption(s,t,v){
+        var o = document.createElement('option');
+        o.text = t;
+        o.value = v;
+        try {
+            s.add(o, null); // standards compliant; doesn't work in IE
+        } catch(e) {
+            s.add(o); // IE only
+        }
+    }
+    function selectOption(s,v){
+        for (var i=0;i<s.length;i++){
+            if(s[i].value == v){
+                s.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    
+    // displays a stack trace for an exception
+    function stackTrace( e ) {
+        var r = '';
+        for (var p in e) {
+            r += p + ': ' + e[p] + '\n';
+        }
+        alert(r);
+        //console.log, console.debug, console.info, console.warn, and console.error.
+    }
+</script>
+<style type="text/css">
+    input[readonly]
+    {
+        background-color: #dcdcdc;
+        color: #000000;
+        cursor: default;
+    }
+</style>
+<script type="text/javascript">
+    // This will build a html table of ipaddresses, you can just ignore it.
+    // The idea is if you want a print the subnet you calculated.
+    function tableBuilder(div){
+        var d = document.getElementById(div);
+        d.innerHTML = "";
+        var t = document.createElement("table");
+        t.border = 1;
+        var b = document.createElement("tbody");
+        var r = null;
+        var c = null;
+        d.appendChild(t);
+        for(var i=0;i<10;i++) {
+            r = document.createElement("tr");
+            for(var j=0;j<8;j++){
+                c=document.createElement("td");
+                var txt = document.createTextNode(i+":"+j);
+                c.appendChild(txt);
+                r.appendChild(c);
+            }
+            b.appendChild(r);
+        }
+        t.appendChild(b);
+        d.appendChild(t);
+    }
+</script>
+</head>
+<body onload="calculateClass('A');" style="background-color:#000;color:#0F0;"> 
+    <fieldset><legend>子网掩码计算器1</legend>
+        <div>
+            <table cellpadding="0" cellspacing="0" border="0" class="ipTable"><tbody>
+                <tr>
+                    <td class="label">IP Address:</td>
+                    <td id="ipMainForm" style="color: #000;"><div class="ipform" id="internal__ipObj0_form"><div class="byteform"><div class="byteedit"><input id="internal__ipObj0_byte3_edit" type="text" class="byte" value="192" onchange="internal__ipsCollection[0].bytes[3].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj0_byte3_bit7" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[7].setReverse();">1</div>
+                    <div id="internal__ipObj0_byte3_bit6" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[6].setReverse();"><font><font>1</font></font></div>
+                    <div id="internal__ipObj0_byte3_bit5" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[5].setReverse();">0</div>
+                    <div id="internal__ipObj0_byte3_bit4" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[4].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte3_bit3" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[3].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte3_bit2" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[2].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte3_bit1" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[1].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte3_bit0" class="bit" onclick="internal__ipsCollection[0].bytes[3].bits[0].setReverse();"><font><font>0</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj0_byte2_edit" type="text" class="byte" value="168" onchange="internal__ipsCollection[0].bytes[2].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj0_byte2_bit7" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[7].setReverse();"><font><font>1</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit6" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[6].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit5" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[5].setReverse();"><font><font>1</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit4" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[4].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit3" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[3].setReverse();"><font><font>1</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit2" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[2].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit1" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[1].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte2_bit0" class="bit" onclick="internal__ipsCollection[0].bytes[2].bits[0].setReverse();"><font><font>0</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj0_byte1_edit" type="text" class="byte" value="0" onchange="internal__ipsCollection[0].bytes[1].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj0_byte1_bit7" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[7].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit6" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[6].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit5" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[5].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit4" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[4].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit3" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[3].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit2" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[2].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit1" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[1].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte1_bit0" class="bit" onclick="internal__ipsCollection[0].bytes[1].bits[0].setReverse();"><font><font>0</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj0_byte0_edit" type="text" class="byte" value="1" onchange="internal__ipsCollection[0].bytes[0].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj0_byte0_bit7" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[7].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit6" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[6].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit5" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[5].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit4" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[4].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit3" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[3].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit2" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[2].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit1" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[1].setReverse();"><font><font>0</font></font></div>
+                    <div id="internal__ipObj0_byte0_bit0" class="bit" onclick="internal__ipsCollection[0].bytes[0].bits[0].setReverse();"><font><font>1</font></font></div></div></div></div></td>
+                </tr>
+                <tr>
+                    <td class="label">Netmask:</td>
+                    <td id="maskMainForm" style="color: #000;"><div class="ipform" id="internal__ipObj1_form"><div class="byteform"><div class="byteedit"><input id="internal__ipObj1_byte3_edit" type="text" class="byte" value="255" onchange="internal__ipsCollection[1].bytes[3].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj1_byte3_bit7" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,7);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit6" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,6);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit5" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,5);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit4" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,4);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit3" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,3);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit2" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,2);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit1" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,1);"><font><font>1</font></font></div>
+                    <div id="internal__ipObj1_byte3_bit0" class="bit" onclick="internal__ipsCollection[1].setNetMask(3,0);"><font><font>1</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj1_byte2_edit" type="text" class="byte" value="255" onchange="internal__ipsCollection[1].bytes[2].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj1_byte2_bit7" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,7);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit6" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,6);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit5" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,5);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit4" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,4);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit3" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,3);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit2" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,2);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit1" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,1);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte2_bit0" class="bit" onclick="internal__ipsCollection[1].setNetMask(2,0);"><font><font>0</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj1_byte1_edit" type="text" class="byte" value="255" onchange="internal__ipsCollection[1].bytes[1].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj1_byte1_bit7" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,7);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit6" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,6);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit5" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,5);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit4" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,4);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit3" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,3);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit2" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,2);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit1" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,1);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte1_bit0" class="bit" onclick="internal__ipsCollection[1].setNetMask(1,0);"><font><font>0</font></font></div></div></div><div class="byteform"><div class="byteedit"><input id="internal__ipObj1_byte0_edit" type="text" class="byte" value="0" onchange="internal__ipsCollection[1].bytes[0].updateByEdit()" size="3"></div><div class="bytebits"><div id="internal__ipObj1_byte0_bit7" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,7);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit6" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,6);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit5" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,5);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit4" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,4);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit3" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,3);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit2" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,2);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit1" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,1);"><font><font>0</font></font></div>
+                    <div id="internal__ipObj1_byte0_bit0" class="bit" onclick="internal__ipsCollection[1].setNetMask(0,0);"><font><font>0</font></font></div></div></div></div></td>
+                </tr>
+            </tbody></table>
+             
+            <table cellpadding="0" cellspacing="0" border="0" class="details"><tbody>
+                <tr><td class="label">IP address (classic):</td><td id="ipClassicValue">192.168.0.1/254.0.0.0</td></tr>
+                <tr><td class="label">IP address (cisco):</td><td id="ipCiscoValue">192.168.0.1/7</td></tr>
+                <tr><td class="label">IP value (binary):</td><td id="ipBinaryValue">11000000.10101000.00000000.00000001</td></tr>
+                <tr><td class="label">Netmask (binary):</td><td id="maskBinaryValue">11111110.00000000.00000000.00000000</td></tr>
+                <tr><td class="label">Network:</td><td id="networkRange">192.0.0.0/7</td></tr>
+                <tr><td class="label">Network Class:</td><td id="networkClass">unknown</td></tr>
+                <tr><td class="label">Total avail. IP:</td><td id="availableIPs">33554432</td></tr>
+                <tr><td class="label">Network address:</td><td id="networkValue">192.0.0.0</td></tr>
+                <tr><td class="label">Broadcast address:</td><td id="broadcastValue">193.255.255.255</td></tr>
+            </tbody></table>
+             
+            <h3 onclick="showHideInfo()">Other info: reserved IP classes</h3>
+            <table cellpadding="0" cellspacing="0" border="0" id="otherinfo"><tbody>
+                <tr><td>127.0.0.0/8</td><td class="info">Loopback<br>the entire class A beginning with 127.</td></tr>
+                <tr><td>10.0.0.0/8</td><td class="info">Private<br>the entire class A beginning with 10.</td></tr>
+                <tr><td>172.16.0.0/12</td><td class="info">Private<br>16 contiguos Class B, from 172.16.0.0/16 through 172.31.0.0/16</td></tr>
+                <tr><td>192.168.0.0/16</td><td class="info">Private<br>256 contiguos Class C, from 192.168.0.0/24 through 192.168.255.0/24</td></tr>
+            </tbody></table>
+        </div>
+    </fieldset>
+
+    <p></p>
+
+    <fieldset><legend>子网掩码计算器2</legend>
+        <form name="SCForm" action="#" id="SCForm">
+            <div>
+                <table>
+                    <tr><td>Class</td><td>A<input type="radio" name="class" value="A" checked="true" onclick="calculateClass('A');" />&nbsp;B<input type="radio" name="class" value="B" onclick="calculateClass('B');" />&nbsp;C<input type="radio" name="class" value="C" onclick="calculateClass('C');" /></td></tr>
+                    <tr><td>Network IP</td><td><input id="network" type="text" onchange="calculateIPCIDR(this.value);" /></td></tr>
+                    <tr><td>Subnet Mask</td><td><input id="mask" type="text" onchange="calculateSubnet(this.value);" /><select id="maskSelect" onchange="calculateSubnet(this.options[this.selectedIndex].value);"><option value="255.0.0.0">loading...</select></td></tr>
+                    <tr><td>Wildcard Mask</td><td><input id="wildcard" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>Mask Bits</td><td><input id="maskbits" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>Hosts</td><td><input id="hosts" type="text" readonly="readonly" /><select id="hostsSelect" onchange="calculateHosts(this.options[this.selectedIndex].value);"><option value="2">loading...</select></td></tr>
+                    <tr><td>Subnet ID</td><td><input id="subnetID" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>Start</td><td><input id="startIP" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>End</td><td><input id="endIP" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>Broadcast</td><td><input id="broadcast" type="text" readonly="readonly" /></td></tr>
+                    <tr><td>Bitmap</td><td><input id="bitmap" type="text" size="35" disabled="disabled" /></td></tr>
+                </table>
+            </div>
+        </form>
+    </fieldset>
+</body>
+</html>

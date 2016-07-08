@@ -1,0 +1,22 @@
+        <div class="box">
+            <div class="cell">
+                <h1>{{ page.title }}</h1>
+            </div>
+            <div class="inner">
+                <div class="content topic_content">{{ content }}</div>
+            </div>
+            <div class="inner">
+                <div class="fr" align="right">{% unless page.tags == empty %}{% assign tags_list = page.tags %}{% include JB/tags_list_post %}{% endunless %}</div>&nbsp;
+            </div>
+        </div>
+        
+        <div class="sep20"></div>
+        <div class="box">
+            <div class="cell"><div class="fr fade"><a href="#_top" class="dark"><strong>↑</strong> Top</a></div>
+            <span class="fade">Add a Reply Now</span>
+            </div>
+            <div class="inner">
+                {% include JB/comments %}
+            </div>
+            <div class="inner"><div class="fr" style="font-size: 12px; margin-left: 20px;"><a href="/">← Home</a></div>➥ Please avoid posting pointless replies, it's always great to save everyone's precious time.</div>
+        </div>

@@ -1,0 +1,43 @@
+        <div class="box">
+            <div class="cell">
+                <h1>{{ page.title }}</h1>
+                <small class="fade">By {{ site.author.name }} at {{ page.date | date_to_long_string }}</small>
+            </div>
+            <div class="inner">
+                <div class="content topic_content">{{ content }}</div>
+            </div>
+            <div class="inner">
+                <div class="fr" align="right">{% unless page.tags == empty %}{% assign tags_list = page.tags %}{% include JB/tags_list_post %}{% endunless %}</div>&nbsp;
+            </div>
+        </div>
+        {% if page.previous or page.next %}
+        <div class="sep20"></div>
+        <div class="box">
+            <div class="inner">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tbody><tr>
+                    {% if page.previous %}
+                    <td width="120" align="left"><div class="sep5"></div><a href="{{ BASE_PATH }}{{ page.previous.url }}" title="{{ page.previous.title }}" class="super normal button">Previous Post</a><div class="sep5"></div></td>
+                    {% else %}
+                    <td width="100" align="left"></td>
+                    {% endif %}
+                    <td width="auto" align="center" valign="middle"><strong style="font-size: 13px"><span class="fade"> </span><span class="snow"> </span></strong></td>
+                    {% if page.next %}
+                    <td width="100" align="right"><div class="sep5"></div><a href="{{ BASE_PATH }}{{ page.next.url }}" title="{{ page.next.title }}" class="super normal button">Next Post</a><div class="sep5"></div></td>
+                    {% else %}
+                    <td width="100" align="right"></td>
+                    {% endif %}
+                </tr></tbody></table>
+            </div>
+        </div>
+        {% endif %}
+        <div class="sep20"></div>
+        <div class="box">
+            <div class="cell"><div class="fr fade"><a href="#_top" class="dark"><strong>↑</strong> Top</a></div>
+            <span class="fade">Add a Reply Now</span>
+            </div>
+            <div class="cell">
+                {% include JB/comments %}
+            </div>
+            <div class="inner"><div class="fr" style="font-size: 12px; margin-left: 20px;"><a href="/">← Home</a></div>➥ Please avoid posting pointless replies, it's always great to save everyone's precious time.</div>
+        </div>

@@ -1,0 +1,85 @@
+body {
+	margin: 0;
+	padding: 0;
+	background: Black;
+	font-size: 12px;
+	overflow: hidden;
+	font-family: Courier New;
+}
+
+a 
+{
+    color: Black;
+}
+
+#btnClear {
+
+}
+#configArea {
+	background: #fff;
+	padding: 10px;
+}
+
+#preview 
+{
+    border: 2px solid White;
+    position: absolute;
+    background: Black;
+}
+#previewArea
+{
+    background: White;
+    display: none;
+    position: absolute;
+}
+
+.label 
+{
+    float: left;
+
+    margin-right: 1em;
+}
+.slider 
+{
+    float: left;
+    width: 80px;
+    margin-right: 2em;
+    margin-top: 2px;
+}
+
+#lblPreview
+{
+    padding: 0px 4px;
+}
+
+#welcomeScreen
+{
+    padding: 10px;
+    position: absolute;
+    display: none;
+    width: 600px;
+    color: #666;
+    font-size: 50px;
+}
+
+#aboutScreen
+{
+    background: #a7d7f9;
+    position: absolute;
+    padding: 10px;
+    display: none;
+}
+
+#aboutScreen h3
+{
+    background: White;
+    padding: 0px 2px;
+    margin: 0;
+}
+
+#aboutScreen p 
+{
+    margin: 10px 0px;
+    padding: 0px 2px;
+    line-height: 18px;
+}

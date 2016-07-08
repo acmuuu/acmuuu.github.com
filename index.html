@@ -1,0 +1,50 @@
+---
+layout: default
+is_index: true
+---
+{% include JB/setup %}
+{% assign index = true %}
+{% for post in paginator.posts %}
+{% assign content = post.content %}
+<div class="box">
+    <div class="cell">
+        <h1><a href="{{ BASE_PATH }}{{ post.url }}">{{ post.title }}</a></h1>
+        <small class="fade">By {{ site.author.name }} at {{ post.date | date_to_long_string }}</small>
+    </div>
+    <div class="inner">
+        <div class="content topic_content">{{ content }}</div>
+    </div>
+    <div class="inner">
+        <div class="fr" align="right">{% unless post.tags == empty %}{% assign tags_list = post.tags %}{% include JB/tags_list_post %}{% endunless %}</div>&nbsp;
+    </div>
+</div>    
+<div class="sep20"></div>
+{% endfor %}
+
+{% if paginator.previous_page or paginator.next_page %}
+<div class="box">
+    <div class="inner">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tbody>
+                <tr>
+                {% if paginator.previous_page %}
+                    {% if paginator.previous_page == 1 %}
+                    <td width="120" align="left"><div class="sep5"></div><a href="/" class="super normal button">Previous Page</a><div class="sep5"></div></td>
+                    {% else %}
+                    <td width="120" align="left"><div class="sep5"></div><a href="/page{{paginator.previous_page}}" class="super normal button">Previous Page</a><div class="sep5"></div></td>
+                    {% endif %}
+                {% else %}
+                    <td width="100" align="left"></td>
+                {% endif %}
+                    <td width="auto" align="center" valign="middle"><strong style="font-size: 13px"><span class="fade">{{paginator.page}}/{{paginator.total_pages}}</span><span class="snow"> - {{paginator.total_posts}} Posts</span></strong></td>
+                {% if paginator.next_page %}
+                    <td width="100" align="right"><div class="sep5"></div><a href="/page{{paginator.next_page}}" class="super normal button">Next Page</a><div class="sep5"></div></td>
+                {% else %}
+                    <td width="100" align="right"></td>
+                {% endif %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
