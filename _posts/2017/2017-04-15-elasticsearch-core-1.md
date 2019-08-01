@@ -1,8 +1,8 @@
 ---
 layout: post
-category : MySQL
-tags : [MySQL, Xcode]
-title: Xcode 编译调试 MySQL
+category : ElasticSearch
+tags : [ElasticSearch]
+title: ElasticSearch 内部机制浅析（一）
 ---
 {% include JB/setup %}
 1、从 MySQL 官方网站下载 MySQL 源码包
