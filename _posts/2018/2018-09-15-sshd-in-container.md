@@ -25,18 +25,18 @@ title: 在Ubuntu容器中运行sshd做日常Linux环境使用
 
 **Ubuntu更新apt源为aliyun的**
 
-cat > /etc/apt/sources.list <<EOF
-deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
-EOF
+    cat > /etc/apt/sources.list <<EOF
+    deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+    EOF
 
 **Ubuntu安装必要的软件和sshd**
 
